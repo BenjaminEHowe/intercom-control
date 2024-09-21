@@ -1,15 +1,19 @@
-from flask import Flask, Response
-import sys
+import flask
+import git
 
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
+
 
 @app.route('/', methods=['GET'])
 def index():
-  return Response(
-    f"It works!\n\nPython {sys.version.split()[0]}\n",
-    mimetype="text/plain"
+  repo = git.Repo()
+  hash = repo.head.object.hexsha
+  return flask.render_template(
+    "about.html",
+    hash=hash
   )
+
 
 if __name__ == "__main__":
   app.run()
