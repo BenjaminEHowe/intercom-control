@@ -1,7 +1,10 @@
 import flask
 import flask_login
+import flask_wtf
 import git
 import os
+import wtforms
+import wtforms.validators
 
 
 app = flask.Flask(__name__)
@@ -9,6 +12,14 @@ app.config["SECRET_KEY"] = os.environ["FLASK_SECRET_KEY"]
 
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
+
+
+class LoginForm(flask_wtf.FlaskForm):
+  username = wtforms.StringField("Username", validators=[wtforms.validators.DataRequired()])
+
+
+class LogoutForm(flask_wtf.FlaskForm):
+  pass
 
 
 class User:
@@ -61,30 +72,34 @@ def index():
   return flask.render_template(
     "about.html",
     current_user = flask_login.current_user,
-    hash = get_git_hash()
+    hash = get_git_hash(),
+    logout_form = LogoutForm()
   )
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-  request = flask.request
-  if request.method == "GET":
-    return flask.render_template(
-      "login.html",
-      current_user = flask_login.current_user,
-      hash = get_git_hash()
-    )
-  else:
-    user_id = request.form.get("username")
+  form = LoginForm()
+  if form.validate_on_submit():
+    user_id = form.username.data
     flask_login.login_user(
       User(user_id)
     )
     return flask.redirect("/")
+  return flask.render_template(
+    "login.html",
+    current_user = flask_login.current_user,
+    form = LoginForm(),
+    hash = get_git_hash(),
+    logout_form = LogoutForm()
+  )
 
 
 @app.route("/logout", methods=["POST"])
 def logout():
-  flask_login.logout_user()
+  form = LogoutForm()
+  if form.validate_on_submit():
+    flask_login.logout_user()
   return flask.redirect("/")
 
 
