@@ -16,6 +16,11 @@ login_manager.init_app(app)
 
 class LoginForm(flask_wtf.FlaskForm):
   username = wtforms.StringField("Username", validators=[wtforms.validators.DataRequired()])
+  password = wtforms.PasswordField("Password", validators=[wtforms.validators.DataRequired()])
+
+  def validate_username(self, field):
+    if self.password.data != "ShouldBeHashed":
+      raise wtforms.validators.ValidationError("Invalid username and / or password")
 
 
 class LogoutForm(flask_wtf.FlaskForm):
@@ -53,7 +58,7 @@ class User:
   def __ne__(self, other):
     equal = self.__eq__(other)
     if equal is NotImplemented:
-      return NotImmplemented
+      return NotImplemented
     return not equal
 
 
@@ -89,7 +94,7 @@ def login():
   return flask.render_template(
     "login.html",
     current_user = flask_login.current_user,
-    form = LoginForm(),
+    form = form,
     hash = get_git_hash(),
     logout_form = LogoutForm()
   )

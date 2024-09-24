@@ -2,9 +2,24 @@
 
 {% block content %}
   <h1 class="mt-5">{% block title %}Login{% endblock %}</h1>
-   <form action="/login" method="post">
-     {{ form.csrf_token }}
-     {{ form.username.label }} {{ form.username(size=20) }}
-     <button type="submit">Login</button>
+  <form action="/login" method="post">
+    {{ form.csrf_token }}
+    {{ form.username.label }} {{ form.username(size=20) }}
+    {% if form.username.errors %}
+      <ul>
+        {% for error in form.username.errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {{ form.password.label }} {{ form.password(size=20) }}
+    {% if form.password.errors %}
+      <ul>
+        {% for error in form.password.errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <button type="submit">Login</button>
   </form> 
 {% endblock %}
