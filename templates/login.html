@@ -1,25 +1,14 @@
+{% from "_util.html" import render_wtf_field, render_wtf_checkbox %}
+
 {% extends 'base.html' %}
 
 {% block content %}
   <h1 class="mt-5">{% block title %}Login{% endblock %}</h1>
   <form action="/login" method="post">
     {{ form.csrf_token }}
-    {{ form.username.label }} {{ form.username(size=20) }}
-    {% if form.username.errors %}
-      <ul>
-        {% for error in form.username.errors %}
-          <li>{{ error }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-    {{ form.password.label }} {{ form.password(size=20) }}
-    {% if form.password.errors %}
-      <ul>
-        {% for error in form.password.errors %}
-          <li>{{ error }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-    <button type="submit">Login</button>
+    {{ render_wtf_field(form.username) }}
+    {{ render_wtf_field(form.password) }}
+    {{ render_wtf_checkbox(form.remember_me) }}
+    {{ form.submit(class_="btn btn-primary") }}
   </form> 
 {% endblock %}

@@ -15,11 +15,14 @@ argon2_time_cost = int(os.environ.get("ARGON2_TIME_COST") or "3")
 
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
+login_manager.session_protection = "strong" # see https://flask-login.readthedocs.io/en/0.6.3/#session-protection
 
 
 class LoginForm(flask_wtf.FlaskForm):
   username = wtforms.StringField("Username", validators=[wtforms.validators.DataRequired()])
   password = wtforms.PasswordField("Password", validators=[wtforms.validators.DataRequired()])
+  remember_me = wtforms.BooleanField("Keep me logged in")
+  submit = wtforms.SubmitField("Login")
 
   def validate_username(self, field):
     # note: this function actually validates the username _and_ password
@@ -105,7 +108,8 @@ def login():
   if form.validate_on_submit():
     user_id = form.username.data
     flask_login.login_user(
-      User(user_id)
+      User(user_id),
+      remember=form.remember_me.data
     )
     return flask.redirect("/")
   return flask.render_template(

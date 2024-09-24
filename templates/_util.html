@@ -1,0 +1,37 @@
+{% macro render_wtf_field(field) %}
+  <div class="mb-3">
+    {{ field.label(class_="form-label") }}
+    {{ field(class_="form-control") }}
+  </div>
+  {% if field.errors %}
+    <div class="mb-3">
+      <div class="alert alert-danger" role="alert">
+        The following error(s) occurred:
+        <ul class="mb-0">
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_wtf_checkbox(field) %}
+  <div class="mb-3">
+    {{ field(class_="form-check-input") }}
+    {{ field.label(class_="form-check-label") }}
+  </div>
+  {% if field.errors %}
+    <div class="mb-3">
+      <div class="alert alert-danger" role="alert">
+        The following error(s) occurred:
+        <ul class="mb-0">
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+{% endmacro %}
