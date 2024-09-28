@@ -55,6 +55,12 @@ class LogoutForm(flask_wtf.FlaskForm):
   pass
 
 
+class ProfileForm(flask_wtf.FlaskForm):
+  email = wtforms.EmailField("Email") # TODO: add validators=[wtforms.validators.DataRequired()] later
+  name = wtforms.StringField("Name")
+  submit = wtforms.SubmitField("Save")
+
+
 class User:
   @classmethod
   def from_db(cls, user: model.User):

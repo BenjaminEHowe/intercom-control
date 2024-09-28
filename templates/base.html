@@ -45,7 +45,7 @@ aria-expanded="false">
                 Hi {{ current_user.get_name() }}!
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><a class="dropdown-item" href="/user/profile">Profile</a></li>
                 <li>
                   <form action="/logout" method="post">
                     {{ logout_form.csrf_token }}

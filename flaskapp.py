@@ -48,6 +48,26 @@ def logout():
   return flask.redirect("/")
 
 
+@app.route("/user/profile", methods=["GET", "POST"])
+@flask_login.login_required
+def profile():
+  form = user.ProfileForm()
+  if form.validate_on_submit():
+    original_user_details = database.select_user_by_login_id(flask_login.current_user.get_id())
+    new_details = {}
+    if form.name.data != original_user_details.name:
+      new_details["name"] = form.name.data
+    if new_details:
+      database.update_user(original_user_details.user_id, **new_details)
+  user_details = database.select_user_by_login_id(flask_login.current_user.get_id())
+  form.email.data = user_details.email
+  form.name.data = user_details.name
+  return common.render_template(
+    "user/profile.html",
+    form = form
+  )
+
+
 if __name__ == "__main__":
   model.Base.metadata.create_all(database.engine)
   app.run()

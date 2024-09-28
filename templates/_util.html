@@ -17,6 +17,13 @@
   {% endif %}
 {% endmacro %}
 
+{% macro render_wtf_field_disabled(field) %}
+  <div class="mb-3">
+    {{ field.label(class_="form-label") }}
+    {{ field(class_="form-control",disabled=True) }}
+  </div>
+{% endmacro %}
+
 {% macro render_wtf_checkbox(field) %}
   <div class="mb-3">
     {{ field(class_="form-check-input") }}

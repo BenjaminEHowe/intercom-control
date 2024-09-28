@@ -1,0 +1,14 @@
+{% from "_util.html" import render_wtf_field, render_wtf_field_disabled %}
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="mt-5">{% block title %}Profile{% endblock %}</h1>
+  <p><a href="#">Change password (coming soon)</a></p>
+  <form action="/user/profile" method="post">
+    {{ form.csrf_token }}
+    {{ render_wtf_field_disabled(form.email) }}
+    {{ render_wtf_field(form.name) }}
+    {{ form.submit(class_="btn btn-primary") }}
+  </form> 
+{% endblock %}
