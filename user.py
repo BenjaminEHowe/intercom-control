@@ -1,6 +1,8 @@
 import argon2
+import flask
 import flask_wtf
 import os
+import ulid
 import wtforms
 import wtforms.validators
 
@@ -22,6 +24,14 @@ class LoginForm(flask_wtf.FlaskForm):
     # note: this function actually validates the username _and_ password
     generic_error = "Invalid email address and / or password"
     user = database.select_user(self.email.data)
+    if user is None:
+      database.insert_log(model.Log(
+        log_id = f"log_{ulid.ULID()}",
+        remote_address = flask.request.remote_addr,
+        type = model.LogType.LOGIN_USER_NOT_FOUND,
+        message = f"User with email address {self.email.data} not found"
+      ))
+      raise wtforms.validators.ValidationError(generic_error)
     password_hasher = argon2.PasswordHasher(
       memory_cost=argon2_memory_cost,
       time_cost=argon2_time_cost,
@@ -31,6 +41,13 @@ class LoginForm(flask_wtf.FlaskForm):
       if password_hasher.check_needs_rehash(user.password_hash):
         database.update_user(user_id=user.user_id, password_hash=password_hasher.hash(self.password.data))
     except argon2.exceptions.VerifyMismatchError:
+      database.insert_log(model.Log(
+        log_id = f"log_{ulid.ULID()}",
+        entity_id = user.user_id,
+        remote_address = flask.request.remote_addr,
+        type = model.LogType.LOGIN_PASSWORD_INCORRECT,
+        message = f"Incorrect password entered"
+      ))
       raise wtforms.validators.ValidationError(generic_error)
 
 

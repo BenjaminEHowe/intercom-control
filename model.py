@@ -1,10 +1,16 @@
 import datetime
+import enum
 import sqlalchemy.orm
 import typing
 
 
 class Base(sqlalchemy.orm.DeclarativeBase):
   pass
+
+
+class LogType(enum.StrEnum):
+  LOGIN_PASSWORD_INCORRECT = "LOGIN_PASSWORD_INCORRECT"
+  LOGIN_USER_NOT_FOUND = "LOGIN_USER_NOT_FOUND"
 
 
 class Log(Base):
@@ -15,9 +21,10 @@ class Log(Base):
     sqlalchemy.DateTime(timezone=True),
     server_default=sqlalchemy.sql.func.now()
   )
-  entity_id = sqlalchemy.orm.Mapped[typing.Optional[str]]
-  type = sqlalchemy.orm.Mapped[str]
-  message = sqlalchemy.orm.Mapped[str]
+  entity_id: sqlalchemy.orm.Mapped[typing.Optional[str]]
+  remote_address: sqlalchemy.orm.Mapped[typing.Optional[str]]
+  type: sqlalchemy.orm.Mapped[LogType]
+  message: sqlalchemy.orm.Mapped[str]
 
 
 class User(Base):
