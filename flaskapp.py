@@ -3,6 +3,8 @@ import flask_login
 import os
 
 import common
+import database
+import model
 import user
 
 
@@ -14,8 +16,8 @@ login_manager.init_app(app)
 login_manager.session_protection = "strong" # see https://flask-login.readthedocs.io/en/0.6.3/#session-protection
 
 @login_manager.user_loader
-def user_loader(user_id):
-  return user.User(user_id)
+def user_loader(login_id):
+  return user.User.from_db(database.select_user_by_login_id(login_id))
 
 
 @app.route("/", methods=["GET"])
@@ -27,9 +29,8 @@ def index():
 def login():
   form = user.LoginForm()
   if form.validate_on_submit():
-    user_id = form.username.data
     flask_login.login_user(
-      user.User(user_id),
+      user.User.from_db(database.select_user(form.email.data)),
       remember=form.remember_me.data
     )
     return flask.redirect("/")
@@ -48,4 +49,5 @@ def logout():
 
 
 if __name__ == "__main__":
+  model.Base.metadata.create_all(database.engine)
   app.run()

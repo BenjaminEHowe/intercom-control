@@ -6,7 +6,7 @@
   <h1 class="mt-5">{% block title %}Login{% endblock %}</h1>
   <form action="/login" method="post">
     {{ form.csrf_token }}
-    {{ render_wtf_field(form.username) }}
+    {{ render_wtf_field(form.email) }}
     {{ render_wtf_field(form.password) }}
     {{ render_wtf_checkbox(form.remember_me) }}
     {{ form.submit(class_="btn btn-primary") }}

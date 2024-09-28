@@ -42,7 +42,7 @@ aria-expanded="false">
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" 
 aria-expanded="false">
-                Hi {{ current_user.user_id }}!
+                Hi {{ current_user.get_name() }}!
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 <li><a class="dropdown-item" href="#">Profile</a></li>
