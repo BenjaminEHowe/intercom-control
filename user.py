@@ -1,17 +1,21 @@
 import argon2
 import flask
+import flask_login
 import flask_wtf
 import os
 import ulid
 import wtforms
 import wtforms.validators
 
+import common
 import database
 import model
 
 
 argon2_memory_cost = int(os.environ.get("ARGON2_MEMORY_COST") or "65536")
 argon2_time_cost = int(os.environ.get("ARGON2_TIME_COST") or "3")
+
+user_blueprint = flask.Blueprint("user", __name__, template_folder="templates/user")
 
 
 class LoginForm(flask_wtf.FlaskForm):
@@ -110,3 +114,47 @@ class FlaskLoginUser:
     if equal is NotImplemented:
       return NotImplemented
     return not equal
+
+
+@user_blueprint.route("/user/login", methods=["GET", "POST"])
+def login():
+  form = LoginForm()
+  if form.validate_on_submit():
+    flask_login.login_user(
+      FlaskLoginUser.from_db(database.select_user(form.email.data)),
+      remember=form.remember_me.data
+    )
+    return flask.redirect("/")
+  return common.render_template(
+    "login.html",
+    form = form
+  )
+
+
+@user_blueprint.route("/user/logout", methods=["POST"])
+def logout():
+  form = LogoutForm()
+  if form.validate_on_submit():
+    flask_login.logout_user()
+  return flask.redirect("/")
+
+
+@user_blueprint.route("/user/profile", methods=["GET", "POST"])
+@flask_login.login_required
+def profile():
+  form = ProfileForm()
+  if form.validate_on_submit():
+    original_user_details = database.select_user_by_login_id(flask_login.current_user.get_id())
+    new_details = {}
+    if form.name.data != original_user_details.name:
+      new_details["name"] = form.name.data
+    if new_details:
+      database.update_user(original_user_details.user_id, **new_details)
+      return flask.redirect("/user/profile")
+  user_details = database.select_user_by_login_id(flask_login.current_user.get_id())
+  form.email.data = user_details.email
+  form.name.data = user_details.name
+  return common.render_template(
+    "user/profile.html",
+    form = form
+  )

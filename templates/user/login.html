@@ -4,7 +4,7 @@
 
 {% block content %}
   <h1 class="mt-5">{% block title %}Login{% endblock %}</h1>
-  <form action="/login" method="post">
+  <form action="/user/login" method="post">
     {{ form.csrf_token }}
     {{ render_wtf_field(form.email) }}
     {{ render_wtf_field(form.password) }}
