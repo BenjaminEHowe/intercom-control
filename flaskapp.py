@@ -59,6 +59,7 @@ def profile():
       new_details["name"] = form.name.data
     if new_details:
       database.update_user(original_user_details.user_id, **new_details)
+      return flask.redirect("/user/profile")
   user_details = database.select_user_by_login_id(flask_login.current_user.get_id())
   form.email.data = user_details.email
   form.name.data = user_details.name
