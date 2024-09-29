@@ -46,7 +46,7 @@ class LoginForm(flask_wtf.FlaskForm):
         entity_id = user.user_id,
         remote_address = flask.request.remote_addr,
         type = model.LogType.LOGIN_PASSWORD_INCORRECT,
-        message = f"Incorrect password entered"
+        message = f"Incorrect password entered for {self.email.data}"
       ))
       raise wtforms.validators.ValidationError(generic_error)
 
