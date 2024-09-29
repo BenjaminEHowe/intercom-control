@@ -17,7 +17,7 @@ login_manager.session_protection = "strong" # see https://flask-login.readthedoc
 
 @login_manager.user_loader
 def user_loader(login_id):
-  return user.User.from_db(database.select_user_by_login_id(login_id))
+  return user.FlaskLoginUser.from_db(database.select_user_by_login_id(login_id))
 
 
 @app.route("/", methods=["GET"])
@@ -30,7 +30,7 @@ def login():
   form = user.LoginForm()
   if form.validate_on_submit():
     flask_login.login_user(
-      user.User.from_db(database.select_user(form.email.data)),
+      user.FlaskLoginUser.from_db(database.select_user(form.email.data)),
       remember=form.remember_me.data
     )
     return flask.redirect("/")

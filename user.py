@@ -61,7 +61,7 @@ class ProfileForm(flask_wtf.FlaskForm):
   submit = wtforms.SubmitField("Save")
 
 
-class User:
+class FlaskLoginUser:
   @classmethod
   def from_db(cls, user: model.User):
     return cls(
@@ -101,7 +101,7 @@ class User:
       return self.email
 
   def __eq__(self, other):
-    if isinstance(other, User):
+    if isinstance(other, FlaskLoginUser):
       return self.get_id() == other.get_id()
     return NotImplemented
 
