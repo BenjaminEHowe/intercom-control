@@ -9,8 +9,13 @@ class Base(sqlalchemy.orm.DeclarativeBase):
 
 
 class LogType(enum.StrEnum):
+  FORGOT_PASSWORD_EMAIL_NOT_FOUND = "FORGOT_PASSWORD_EMAIL_NOT_FOUND"
+  FORGOT_PASSWORD_TOKEN_SENT = "FORGOT_PASSWORD_TOKEN_SENT"
   LOGIN_PASSWORD_INCORRECT = "LOGIN_PASSWORD_INCORRECT"
+  LOGIN_SUCCESS = "LOGIN_SUCCESS"
   LOGIN_USER_NOT_FOUND = "LOGIN_USER_NOT_FOUND"
+  PASSWORD_RESET_SUCCESS = "PASSWORD_RESET_SUCCESS"
+  PASSWORD_RESET_TOKEN_NOT_FOUND = "RESET_PASSWORD_RESET_TOKEN_NOT_FOUND"
 
 
 class Log(Base):
@@ -25,6 +30,17 @@ class Log(Base):
   remote_address: sqlalchemy.orm.Mapped[typing.Optional[str]]
   type: sqlalchemy.orm.Mapped[LogType]
   message: sqlalchemy.orm.Mapped[str]
+
+
+class PasswordResetToken(Base):
+  __tablename__ = "password_reset_token"
+
+  token_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True)
+  user_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(sqlalchemy.ForeignKey("user.user_id"))
+  created: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
+    sqlalchemy.DateTime(timezone=True),
+    server_default=sqlalchemy.sql.func.now()
+  )
 
 
 class User(Base):

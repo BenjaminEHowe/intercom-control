@@ -8,6 +8,7 @@
     {{ form.csrf_token }}
     {{ render_wtf_field(form.email) }}
     {{ render_wtf_field(form.password) }}
+    <p><a href="/user/forgot-password">Forgot password</a></p>
     {{ render_wtf_checkbox(form.remember_me) }}
     {{ form.submit(class_="btn btn-primary") }}
   </form> 
