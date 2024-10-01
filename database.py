@@ -33,18 +33,15 @@ def insert_password_reset_token(token: model.PasswordResetToken):
     session.commit()
 
 
-def insert_users(users: typing.Sequence[model.User]) -> typing.Sequence[model.User]:
+def insert_users(users: typing.Sequence[model.User]):
   user_ids = [user.user_id for user in users]
   with sqlalchemy.orm.Session(engine) as session:
     session.add_all(users)
     session.commit()
-    return session.scalars(
-      sqlalchemy.select(model.User).where(model.User.user_id.in_(user_ids))
-    ).all()
 
 
-def insert_user(user: model.User) -> model.User:
-  return insert_users((user, ))[0]
+def insert_user(user: model.User):
+  insert_users((user, ))
 
 
 def select_token(token_id: str) -> model.PasswordResetToken:
@@ -66,6 +63,7 @@ def select_user_by_login_id(login_id: str) -> model.User:
 
 
 def select_user_by_user_id(user_id: str) -> model.User:
+  print(f"Selecting user by user ID: {user_id}")
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.select(model.User).where(model.User.user_id == user_id)
     return session.scalars(statement).one_or_none()

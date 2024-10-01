@@ -3,8 +3,6 @@ import flask
 import flask_login
 import flask_wtf
 import os
-import secrets
-import ulid
 import wtforms
 import wtforms.validators
 from flask import request
@@ -32,7 +30,6 @@ class PasswordTwiceForm(flask_wtf.FlaskForm):
   def validate_token(self, field):
     if database.select_token(field.data) is None:
       database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
         remote_address = flask.request.remote_addr,
         type = model.LogType.PASSWORD_RESET_TOKEN_NOT_FOUND,
         message = f"Password reset token {field.data} not found"
@@ -80,7 +77,6 @@ class LoginForm(flask_wtf.FlaskForm):
     user = database.select_user_by_email(self.email.data)
     if user is None:
       database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
         remote_address = flask.request.remote_addr,
         type = model.LogType.LOGIN_USER_NOT_FOUND,
         message = f"User with email address {self.email.data} not found"
@@ -92,17 +88,12 @@ class LoginForm(flask_wtf.FlaskForm):
         database.update_user(user_id=user.user_id, password_hash=password_hasher.hash(self.password.data))
     except argon2.exceptions.VerifyMismatchError:
       database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
         entity_id = user.user_id,
         remote_address = flask.request.remote_addr,
         type = model.LogType.LOGIN_PASSWORD_INCORRECT,
         message = f"Incorrect password entered for {self.email.data}"
       ))
       raise wtforms.validators.ValidationError(generic_error)
-
-
-class LogoutForm(flask_wtf.FlaskForm):
-  pass
 
 
 class ProfileForm(flask_wtf.FlaskForm):
@@ -173,13 +164,15 @@ class FlaskLoginUser:
 
 
 def _generate_and_send_reset_token(user: model.User):
-  token = secrets.token_urlsafe(16)
+  token = common.generate_id(
+    prefix = "token",
+    secure = True
+  )
   database.insert_password_reset_token(model.PasswordResetToken(
     token_id = token,
     user_id = user.user_id
   ))
   database.insert_log(model.Log(
-    log_id = f"log_{ulid.ULID()}",
     entity_id = user.user_id,
     remote_address = flask.request.remote_addr,
     type = model.LogType.FORGOT_PASSWORD_TOKEN_SENT,
@@ -199,7 +192,6 @@ def change_password():
   if form.validate_on_submit():
     user = database.select_user_by_login_id(flask_login.current_user.get_id())
     database.insert_log(model.Log(
-      log_id = f"log_{ulid.ULID()}",
       entity_id = user.user_id,
       remote_address = flask.request.remote_addr,
       type = model.LogType.PASSWORD_CHANGE,
@@ -227,7 +219,6 @@ def forgot_password():
     user = database.select_user_by_email(form.email.data)
     if user is None:
       database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
         remote_address = flask.request.remote_addr,
         type = model.LogType.FORGOT_PASSWORD_EMAIL_NOT_FOUND,
         message = f"Sending account not found forgot password email to {email}"
@@ -250,7 +241,6 @@ def login():
   if form.validate_on_submit():
     user = database.select_user_by_email(form.email.data)
     database.insert_log(model.Log(
-      log_id = f"log_{ulid.ULID()}",
       entity_id = user.user_id,
       remote_address = flask.request.remote_addr,
       type = model.LogType.LOGIN_SUCCESS,
@@ -269,7 +259,7 @@ def login():
 
 @user_blueprint.route("/user/logout", methods=["POST"])
 def logout():
-  form = LogoutForm()
+  form = common.LogoutForm()
   if form.validate_on_submit():
     flask_login.logout_user()
   return flask.redirect("/")
@@ -302,26 +292,24 @@ def register():
     return flask.redirect("/")
   form = RegisterForm()
   if form.validate_on_submit():
-    user = database.select_user_by_email(form.email.data)
+    email = form.email.data
+    user = database.select_user_by_email(email)
     if user is None:
       # TODO: consider adding the below database operations into a single transaction
-      user = database.insert_user(model.User(
-        user_id = f"user_{ulid.ULID()}",
-        login_id = f"login_{ulid.ULID()}",
-        email = form.email.data,
+      database.insert_user(model.User(
+        email = email,
         password_hash = "invalid"
       ))
+      user = database.select_user_by_email(email)
       database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
         entity_id = user.user_id,
         remote_address = flask.request.remote_addr,
         type = model.LogType.REGISTER_USER,
-        message = f"Creating new user for {form.email.data}"
+        message = f"Created new user for {email}"
       ))
       _generate_and_send_reset_token(user)
     else:
       database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
         entity_id = user.user_id,
         remote_address = flask.request.remote_addr,
         type = model.LogType.FORGOT_PASSWORD_TOKEN_SENT,
@@ -350,7 +338,6 @@ def reset_password():
     user = database.select_user_by_user_id(token.user_id)
     # TODO: consider adding the below database operations into a single transaction
     database.insert_log(model.Log(
-      log_id = f"log_{ulid.ULID()}",
       entity_id = user.user_id,
       remote_address = flask.request.remote_addr,
       type = model.LogType.PASSWORD_RESET_SUCCESS,

@@ -3,6 +3,8 @@ import enum
 import sqlalchemy.orm
 import typing
 
+import common
+
 
 class Base(sqlalchemy.orm.DeclarativeBase):
   pass
@@ -24,7 +26,7 @@ class LogType(enum.StrEnum):
 class Log(Base):
   __tablename__ = "log"
 
-  log_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True)
+  log_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:common.generate_id("log"))
   timestamp: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
     sqlalchemy.DateTime(timezone=True),
     server_default=sqlalchemy.sql.func.now()
@@ -49,8 +51,8 @@ class PasswordResetToken(Base):
 class User(Base):
   __tablename__ = "user"
 
-  user_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True)
-  login_id: sqlalchemy.orm.Mapped[str]
+  user_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:common.generate_id("user"))
+  login_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(default=lambda:common.generate_id("login"))
   created: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
     sqlalchemy.DateTime(timezone=True),
     server_default=sqlalchemy.sql.func.now()
