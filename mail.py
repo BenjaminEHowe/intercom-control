@@ -36,3 +36,17 @@ Someone, hopefully you, has requested a password reset for your account at {base
     message += "Unfortunately we couldn't find an account for you with this email address.\n\n"
   message += "Have a great day!\n"
   return message
+
+
+def generate_registration_account_exists_message(base_url):
+  return f"""\
+Subject: Intercom Control Registration
+
+Hello,
+
+Someone, hopefully you, has attempted to register for an account at {base_url}.
+
+You already have an account. To log in visit {base_url}user/login . If you do not remember your password then you can reset it.
+
+Have a great day!
+"""

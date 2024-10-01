@@ -34,7 +34,7 @@ class LoginForm(flask_wtf.FlaskForm):
   def validate_email(self, field):
     # note: this function actually validates the username _and_ password
     generic_error = "Invalid email address and / or password"
-    user = database.select_user(self.email.data)
+    user = database.select_user_by_email(self.email.data)
     if user is None:
       database.insert_log(model.Log(
         log_id = f"log_{ulid.ULID()}",
@@ -70,6 +70,11 @@ class ProfileForm(flask_wtf.FlaskForm):
   email = wtforms.EmailField("Email") # TODO: add validators=[wtforms.validators.DataRequired()] later
   name = wtforms.StringField("Name")
   submit = wtforms.SubmitField("Save")
+
+
+class RegisterForm(flask_wtf.FlaskForm):
+  email = wtforms.EmailField("Email", validators=[wtforms.validators.DataRequired()])
+  submit = wtforms.SubmitField("Register")
 
 
 class ResetPasswordForm(flask_wtf.FlaskForm):
@@ -151,6 +156,25 @@ class FlaskLoginUser:
     return not equal
 
 
+def _generate_and_send_reset_token(user: model.User):
+  token = f"reset_{ulid.ULID()}"
+  database.insert_password_reset_token(model.PasswordResetToken(
+    token_id = token,
+    user_id = user.user_id
+  ))
+  database.insert_log(model.Log(
+    log_id = f"log_{ulid.ULID()}",
+    entity_id = user.user_id,
+    remote_address = flask.request.remote_addr,
+    type = model.LogType.FORGOT_PASSWORD_TOKEN_SENT,
+    message = f"Sending forgot password reset token email to {user.email}"
+  ))
+  mail.send_email(
+    to = user.email,
+    message = mail.generate_forgot_password_message(flask.request.root_url, token)
+  )
+
+
 @user_blueprint.route("/user/forgot-password", methods=["GET", "POST"])
 def forgot_password():
   if flask_login.current_user.is_authenticated:
@@ -158,7 +182,7 @@ def forgot_password():
   form = ForgotPasswordForm()
   if form.validate_on_submit():
     email = form.email.data
-    user = database.select_user(form.email.data)
+    user = database.select_user_by_email(form.email.data)
     if user is None:
       database.insert_log(model.Log(
         log_id = f"log_{ulid.ULID()}",
@@ -171,22 +195,7 @@ def forgot_password():
         message = mail.generate_forgot_password_message(flask.request.root_url)
       )
     else:
-      token = f"reset_{ulid.ULID()}"
-      database.insert_password_reset_token(model.PasswordResetToken(
-        token_id = token,
-        user_id = user.user_id
-      ))
-      database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
-        entity_id = user.user_id,
-        remote_address = flask.request.remote_addr,
-        type = model.LogType.FORGOT_PASSWORD_TOKEN_SENT,
-        message = f"Sending forgot password reset token email to {email}"
-      ))
-      mail.send_email(
-        to = email,
-        message = mail.generate_forgot_password_message(flask.request.root_url, token)
-      )
+      _generate_and_send_reset_token(user)
   return common.render_template(
     "forgot_password.html",
     form = form
@@ -197,7 +206,7 @@ def forgot_password():
 def login():
   form = LoginForm()
   if form.validate_on_submit():
-    user = database.select_user(form.email.data)
+    user = database.select_user_by_email(form.email.data)
     database.insert_log(model.Log(
       log_id = f"log_{ulid.ULID()}",
       entity_id = user.user_id,
@@ -241,6 +250,47 @@ def profile():
   form.name.data = user_details.name
   return common.render_template(
     "user/profile.html",
+    form = form
+  )
+
+
+@user_blueprint.route("/user/register", methods=["GET", "POST"])
+def register():
+  if flask_login.current_user.is_authenticated:
+    return flask.redirect("/")
+  form = RegisterForm()
+  if form.validate_on_submit():
+    user = database.select_user_by_email(form.email.data)
+    if user is None:
+      # TODO: consider adding the below database operations into a single transaction
+      user = database.insert_user(model.User(
+        user_id = f"user_{ulid.ULID()}",
+        login_id = f"login_{ulid.ULID()}",
+        email = form.email.data,
+        password_hash = "invalid"
+      ))
+      database.insert_log(model.Log(
+        log_id = f"log_{ulid.ULID()}",
+        entity_id = user.user_id,
+        remote_address = flask.request.remote_addr,
+        type = model.LogType.REGISTER_USER,
+        message = f"Creating new user for {form.email.data}"
+      ))
+      _generate_and_send_reset_token(user)
+    else:
+      database.insert_log(model.Log(
+        log_id = f"log_{ulid.ULID()}",
+        entity_id = user.user_id,
+        remote_address = flask.request.remote_addr,
+        type = model.LogType.FORGOT_PASSWORD_TOKEN_SENT,
+        message = f"Registration attempt by {user.email} but email address already exists"
+      ))
+      mail.send_email(
+        to = user.email,
+        message = mail.generate_registration_account_exists_message(flask.request.root_url)
+      )
+  return common.render_template(
+    "register.html",
     form = form
   )
 
