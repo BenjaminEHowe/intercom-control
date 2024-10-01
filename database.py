@@ -63,7 +63,6 @@ def select_user_by_login_id(login_id: str) -> model.User:
 
 
 def select_user_by_user_id(user_id: str) -> model.User:
-  print(f"Selecting user by user ID: {user_id}")
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.select(model.User).where(model.User.user_id == user_id)
     return session.scalars(statement).one_or_none()

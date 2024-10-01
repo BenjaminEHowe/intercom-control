@@ -91,7 +91,15 @@ class LoginForm(flask_wtf.FlaskForm):
         entity_id = user.user_id,
         remote_address = flask.request.remote_addr,
         type = model.LogType.LOGIN_PASSWORD_INCORRECT,
-        message = f"Incorrect password entered for {self.email.data}"
+        message = "Incorrect password entered"
+      ))
+      raise wtforms.validators.ValidationError(generic_error)
+    except argon2.exceptions.InvalidHashError:
+      database.insert_log(model.Log(
+        entity_id = user.user_id,
+        remote_address = flask.request.remote_addr,
+        type = model.LogType.LOGIN_PASSWORD_HASH_INVALID,
+        message = f"Password hash \"{user.password_hash}\" is invalid"
       ))
       raise wtforms.validators.ValidationError(generic_error)
 
