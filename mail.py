@@ -34,7 +34,7 @@ Someone, hopefully you, has requested a password reset for your account at {base
     message += f"To reset your password, visit {base_url}user/reset-password?token={token}\n\n"
   else:
     message += "Unfortunately we couldn't find an account for you with this email address.\n\n"
-  message += "Have a great day!\n"
+  message += "Have a nice day!\n"
   return message
 
 
@@ -48,5 +48,5 @@ Someone, hopefully you, has attempted to register for an account at {base_url}.
 
 You already have an account. To log in visit {base_url}user/login . If you do not remember your password then you can reset it.
 
-Have a great day!
+Have a nice day!
 """

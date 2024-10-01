@@ -17,8 +17,50 @@ import model
 
 argon2_memory_cost = int(os.environ.get("ARGON2_MEMORY_COST") or "65536")
 argon2_time_cost = int(os.environ.get("ARGON2_TIME_COST") or "3")
+password_hasher = argon2.PasswordHasher(
+  memory_cost = argon2_memory_cost,
+  time_cost = argon2_time_cost,
+)
 
 user_blueprint = flask.Blueprint("user", __name__, template_folder="templates/user")
+
+
+class PasswordTwiceForm(flask_wtf.FlaskForm):
+  password = wtforms.PasswordField("Password", validators=[wtforms.validators.DataRequired()])
+  password_again = wtforms.PasswordField("Password, again", validators=[wtforms.validators.DataRequired()])
+
+  def validate_token(self, field):
+    if database.select_token(field.data) is None:
+      database.insert_log(model.Log(
+        log_id = f"log_{ulid.ULID()}",
+        remote_address = flask.request.remote_addr,
+        type = model.LogType.PASSWORD_RESET_TOKEN_NOT_FOUND,
+        message = f"Password reset token {field.data} not found"
+      ))
+      raise wtforms.validators.ValidationError("Invalid password reset token")
+
+  def validate_password(self, field):
+    min_length = 12
+    if len(field.data) < min_length:
+      raise wtforms.validators.ValidationError(f"Password should be at least {str(min_length)} characters long")
+
+
+  def validate_password_again(self, field):
+    if field.data != self.password.data:
+      raise wtforms.validators.ValidationError("Passwords do not match")
+
+
+class ChangePasswordForm(PasswordTwiceForm):
+  current_password = wtforms.PasswordField("Password", validators=[wtforms.validators.DataRequired()])
+  submit = wtforms.SubmitField("Change Password")
+
+  def validate_current_password(self, field):
+    flask_login_user = flask_login.current_user
+    user = database.select_user_by_login_id(flask_login_user.get_id())
+    try:
+      password_hasher.verify(user.password_hash, field.data)
+    except argon2.exceptions.VerifyMismatchError:
+      raise wtforms.validators.ValidationError("Password is incorrect")
 
 
 class ForgotPasswordForm(flask_wtf.FlaskForm):
@@ -44,10 +86,6 @@ class LoginForm(flask_wtf.FlaskForm):
         message = f"User with email address {self.email.data} not found"
       ))
       raise wtforms.validators.ValidationError(generic_error)
-    password_hasher = argon2.PasswordHasher(
-      memory_cost = argon2_memory_cost,
-      time_cost = argon2_time_cost,
-    )
     try:
       password_hasher.verify(user.password_hash, self.password.data)
       if password_hasher.check_needs_rehash(user.password_hash):
@@ -78,32 +116,9 @@ class RegisterForm(flask_wtf.FlaskForm):
   submit = wtforms.SubmitField("Register")
 
 
-class ResetPasswordForm(flask_wtf.FlaskForm):
+class ResetPasswordForm(PasswordTwiceForm):
   token = wtforms.HiddenField(validators=[wtforms.validators.DataRequired()])
-  password = wtforms.PasswordField("Password", validators=[wtforms.validators.DataRequired()])
-  password_again = wtforms.PasswordField("Password, again", validators=[wtforms.validators.DataRequired()])
   submit = wtforms.SubmitField("Request Password Reset")
-
-  def validate_token(self, field):
-    if database.select_token(field.data) is None:
-      database.insert_log(model.Log(
-        log_id = f"log_{ulid.ULID()}",
-        remote_address = flask.request.remote_addr,
-        type = model.LogType.PASSWORD_RESET_TOKEN_NOT_FOUND,
-        message = f"Password reset token {field.data} not found"
-      ))
-      raise wtforms.validators.ValidationError("Invalid password reset token")
-
-  def validate_password(self, field):
-    min_length = 12
-    if len(field.data) < min_length:
-      raise wtforms.validators.ValidationError(f"Password should be at least {str(min_length)} characters long")
-
-
-  def validate_password_again(self, field):
-    if field.data != self.password.data:
-      raise wtforms.validators.ValidationError("Passwords do not match")
-
 
 
 class FlaskLoginUser:
@@ -173,6 +188,32 @@ def _generate_and_send_reset_token(user: model.User):
   mail.send_email(
     to = user.email,
     message = mail.generate_forgot_password_message(flask.request.root_url, token)
+  )
+
+
+@user_blueprint.route("/user/change-password", methods=["GET", "POST"])
+@flask_login.login_required
+def change_password():
+  form = ChangePasswordForm()
+  success = False
+  if form.validate_on_submit():
+    user = database.select_user_by_login_id(flask_login.current_user.get_id())
+    database.insert_log(model.Log(
+      log_id = f"log_{ulid.ULID()}",
+      entity_id = user.user_id,
+      remote_address = flask.request.remote_addr,
+      type = model.LogType.PASSWORD_CHANGE,
+      message = f"Password changed"
+    ))
+    database.update_user(
+      user_id = user.user_id,
+      password_hash = password_hasher.hash(form.password.data)
+    )
+    success = True
+  return common.render_template(
+    "change_password.html",
+    form = form,
+    success = success
   )
 
 
@@ -307,10 +348,6 @@ def reset_password():
   if form.validate_on_submit():
     token = database.select_token(form.token.data)
     user = database.select_user_by_user_id(token.user_id)
-    password_hasher = argon2.PasswordHasher(
-      memory_cost = argon2_memory_cost,
-      time_cost = argon2_time_cost,
-    )
     # TODO: consider adding the below database operations into a single transaction
     database.insert_log(model.Log(
       log_id = f"log_{ulid.ULID()}",

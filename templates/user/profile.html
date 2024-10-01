@@ -4,7 +4,7 @@
 
 {% block content %}
   <h1 class="mt-5">{% block title %}Profile{% endblock %}</h1>
-  <p><a href="#">Change password (coming soon)</a></p>
+  <p><a href="/user/change-password">Change password</a></p>
   <form action="/user/profile" method="post">
     {{ form.csrf_token }}
     {{ render_wtf_field_disabled(form.email) }}
