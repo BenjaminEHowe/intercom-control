@@ -3,6 +3,7 @@ import flask
 import flask_login
 import flask_wtf
 import os
+import secrets
 import ulid
 import wtforms
 import wtforms.validators
@@ -157,7 +158,7 @@ class FlaskLoginUser:
 
 
 def _generate_and_send_reset_token(user: model.User):
-  token = f"reset_{ulid.ULID()}"
+  token = secrets.token_urlsafe(16)
   database.insert_password_reset_token(model.PasswordResetToken(
     token_id = token,
     user_id = user.user_id
