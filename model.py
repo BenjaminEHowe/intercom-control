@@ -32,6 +32,7 @@ class Log(Base):
     sqlalchemy.DateTime(timezone=True),
     server_default=sqlalchemy.sql.func.now()
   )
+  user_id: sqlalchemy.orm.Mapped[typing.Optional[str]]
   entity_id: sqlalchemy.orm.Mapped[typing.Optional[str]]
   remote_address: sqlalchemy.orm.Mapped[typing.Optional[str]]
   type: sqlalchemy.orm.Mapped[LogType]
