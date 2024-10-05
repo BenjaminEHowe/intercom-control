@@ -22,5 +22,6 @@ def render_template(name, **kwargs):
     hash = get_git_hash(),
     intercoms = database.select_intercoms(),
     logout_form = LogoutForm(),
+    session = flask.session,
     **kwargs
   )

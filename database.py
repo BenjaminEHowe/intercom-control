@@ -84,6 +84,13 @@ def select_user_by_user_id(user_id: str) -> model.User:
     return session.scalars(statement).one_or_none()
 
 
+def update_intercom(intercom_id: str, **kwargs):
+  with sqlalchemy.orm.Session(engine) as session:
+    statement = sqlalchemy.update(model.Intercom).where(model.Intercom.intercom_id == intercom_id).values(**kwargs)
+    session.execute(statement)
+    session.commit()
+
+
 def update_user(user_id: str, **kwargs):
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.update(model.User).where(model.User.user_id == user_id).values(**kwargs)

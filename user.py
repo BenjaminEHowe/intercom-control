@@ -268,6 +268,7 @@ def logout():
   form = common.LogoutForm()
   if form.validate_on_submit():
     flask_login.logout_user()
+    flask.session.clear()
   return flask.redirect("/")
 
 
