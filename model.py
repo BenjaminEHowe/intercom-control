@@ -1,9 +1,25 @@
 import datetime
 import enum
+import secrets
 import sqlalchemy.orm
 import typing
+import ulid
 
 import common
+
+
+def generate_id(
+  prefix: typing.Optional[str],
+  secure: bool = False
+):
+  if secure:
+    identifier = secrets.token_urlsafe(16)
+  else:
+    identifier = str(ulid.ULID())
+  if prefix:
+    return f"{prefix}_{identifier}"
+  else:
+    return identifier
 
 
 class Base(sqlalchemy.orm.DeclarativeBase):
@@ -28,7 +44,7 @@ class LogType(enum.StrEnum):
 class Intercom(Base):
   __tablename__ = "intercom"
 
-  intercom_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:common.generate_id("intercom"))
+  intercom_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:generate_id("intercom"))
   name: sqlalchemy.orm.Mapped[str]
   display_name: sqlalchemy.orm.Mapped[typing.Optional[str]]
   serial_number: sqlalchemy.orm.Mapped[str]
@@ -38,7 +54,7 @@ class Intercom(Base):
 class Log(Base):
   __tablename__ = "log"
 
-  log_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:common.generate_id("log"))
+  log_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:generate_id("log"))
   timestamp: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
     sqlalchemy.DateTime(timezone=True),
     server_default = sqlalchemy.sql.func.now()
@@ -55,7 +71,7 @@ class PasswordResetToken(Base):
 
   token_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
     primary_key = True,
-    default = lambda:common.generate_id(prefix="token", secure=True)
+    default = lambda:generate_id(prefix="token", secure=True)
   )
   user_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(sqlalchemy.ForeignKey("user.user_id"))
   created: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
@@ -67,8 +83,8 @@ class PasswordResetToken(Base):
 class User(Base):
   __tablename__ = "user"
 
-  user_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:common.generate_id("user"))
-  login_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(default=lambda:common.generate_id("login"))
+  user_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:generate_id("user"))
+  login_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(default=lambda:generate_id("login"))
   created: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
     sqlalchemy.DateTime(timezone=True),
     server_default = sqlalchemy.sql.func.now()
