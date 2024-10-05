@@ -41,6 +41,12 @@ def insert_password_reset_token(token: model.PasswordResetToken) -> model.Passwo
   return token
 
 
+def insert_unit(unit: model.Unit):
+  with sqlalchemy.orm.Session(engine) as session:
+    session.add(unit)
+    session.commit()
+
+
 def insert_user(user: model.User) -> model.User:
   with sqlalchemy.orm.Session(engine, expire_on_commit=False) as session:
     session.add(user)
@@ -52,12 +58,12 @@ def select_intercom_by_id(intercom_id: str):
   with sqlalchemy.orm.Session(engine) as session:
     return session.scalars(
       sqlalchemy.select(model.Intercom).where(model.Intercom.intercom_id == intercom_id)
-    ).one_or_none()
+    ).unique().one_or_none()
 
 
 def select_intercoms() -> typing.Sequence[model.Intercom]:
   with sqlalchemy.orm.Session(engine) as session:
-    return session.scalars(sqlalchemy.select(model.Intercom)).all()
+    return session.scalars(sqlalchemy.select(model.Intercom)).unique().all()
 
 
 def select_token(token_id: str) -> model.PasswordResetToken:

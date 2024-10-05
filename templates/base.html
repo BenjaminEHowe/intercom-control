@@ -20,8 +20,8 @@
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="intercomDropdown" role="button" data-bs-toggle="dropdown"
   aria-expanded="false">
-                {% if "current_intercom_name" in session.keys() %}
-                  {{ session["current_intercom_name"] }}
+                {% if current_intercom_name is defined %}
+                  {{ current_intercom_name }}
                 {% else %}
                   Select intercom
                 {% endif %}
@@ -34,12 +34,12 @@
                 <li><a class="dropdown-item" href="/intercom/add">Add Intercom</a></li>
               </ul>
             </li>
-            {% if "current_intercom_id" in session.keys() %}
+            {% if current_intercom_id is defined %}
               <li class="nav-item">
-                <a class="nav-link" href="/intercom/{{ session['current_intercom_id'] }}/units">Units</a>
+                <a class="nav-link" href="/intercom/{{ current_intercom_id }}/units">Units</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/intercom/{{ session['current_intercom_id'] }}/trade">Trade button</a>
+                <a class="nav-link" href="/intercom/{{ current_intercom_id }}/trade">Trade button</a>
               </li>
             {% endif %}
           {% endif %}
@@ -56,6 +56,7 @@ aria-expanded="false">
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 <li><a class="dropdown-item" href="/user/profile">Profile</a></li>
+                <li><a class="dropdown-item" href="/user/units">Units</a></li>
                 <li>
                   <form action="/user/logout" method="post">
                     {{ logout_form.csrf_token }}

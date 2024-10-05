@@ -18,7 +18,10 @@ login_manager.session_protection = "strong" # see https://flask-login.readthedoc
 
 @login_manager.user_loader
 def user_loader(login_id):
-  return user.FlaskLoginUser.from_db(database.select_user_by_login_id(login_id))
+  user_from_login_in = database.select_user_by_login_id(login_id)
+  if user_from_login_in is None:
+    return None
+  return user.FlaskLoginUser.from_db(user_from_login_in)
 
 
 app.register_blueprint(intercom.intercom_blueprint)

@@ -1,0 +1,14 @@
+{% from "_util.html" import render_wtf_field %}
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="mt-5">{% block title %}Add Intercom{% endblock %}</h1>
+  <form action="/intercom/add" method="post">
+    {{ form.csrf_token }}
+    {{ render_wtf_field(form.name) }}
+    {{ render_wtf_field(form.serial_number) }}
+    {{ render_wtf_field(form.phone_number) }}
+    {{ form.submit(class_="btn btn-primary") }}
+  </form>
+{% endblock %}

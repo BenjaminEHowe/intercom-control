@@ -12,4 +12,11 @@
     {{ render_wtf_field(form.phone_number) }}
     {{ form.submit(class_="btn btn-primary") }}
   </form>
+  <h2 class="mt-4">Units</h2>
+  <p><a href="/intercom/{{ intercom.intercom_id }}/unit/add">Add new unit</a></p>
+  <ul>
+    {% for unit in intercom.units %}
+      <li>{{ unit.name }}</li>
+    {% endfor %}
+  </ul>
 {% endblock %}

@@ -119,7 +119,7 @@ class RegisterForm(flask_wtf.FlaskForm):
 
 class ResetPasswordForm(PasswordTwiceForm):
   token = wtforms.HiddenField(validators=[wtforms.validators.DataRequired()])
-  submit = wtforms.SubmitField("Request Password Reset")
+  submit = wtforms.SubmitField("Reset Password")
 
 
 class FlaskLoginUser:

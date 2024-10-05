@@ -20,6 +20,11 @@ class AddIntercomForm(flask_wtf.FlaskForm):
   # TODO: consider adding custom validation for serial number and phone number
 
 
+class AddUnitForm(flask_wtf.FlaskForm):
+  name = wtforms.StringField("Name", validators=[wtforms.validators.DataRequired()])
+  submit = wtforms.SubmitField("Add Unit")
+
+
 class EditIntercomForm(AddIntercomForm):
   display_name = wtforms.StringField("Display Name")
   submit = wtforms.SubmitField("Edit Intercom")
@@ -47,7 +52,7 @@ def add_intercom():
     ))
     return flask.redirect(f"/intercom/{intercom.intercom_id}")
   return common.render_template(
-    "new_intercom.html",
+    "add_intercom.html",
     form = form
   )
 
@@ -74,13 +79,33 @@ def edit_intercom(intercom_id):
       # TODO: if we updated the display name, send a SMS
       intercom = database.select_intercom_by_id(intercom_id)
   flask.session["current_intercom_id"] = intercom.intercom_id
-  flask.session["current_intercom_name"] = intercom.name
   form.name.data = intercom.name
   form.display_name.data = intercom.display_name
   form.serial_number.data = intercom.serial_number
   form.phone_number.data = intercom.phone_number
   return common.render_template(
     "intercom.html",
+    form = form,
+    intercom = intercom
+  )
+
+
+@intercom_blueprint.route("/intercom/<intercom_id>/unit/add", methods=["GET", "POST"])
+@flask_login.login_required
+def add_unit(intercom_id):
+  # TODO: allow an existing unit to be added
+  intercom = database.select_intercom_by_id(intercom_id)
+  if intercom is None:
+    return flask.abort(404)
+  form = AddUnitForm()
+  if form.validate_on_submit():
+    database.insert_unit(model.Unit(
+      name = form.name.data,
+      intercoms = [intercom]
+    ))
+    return flask.redirect(f"/intercom/{intercom_id}")
+  return common.render_template(
+    "add_unit.html",
     form = form,
     intercom = intercom
   )
