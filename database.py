@@ -17,6 +17,13 @@ def delete_password_reset_tokens(user_id: str):
     session.commit()
 
 
+def insert_intercom(intercom: model.Intercom) -> model.Intercom:
+  with sqlalchemy.orm.Session(engine, expire_on_commit=False) as session:
+    session.add(intercom)
+    session.commit()
+  return intercom
+
+
 def insert_logs(logs: typing.Sequence[model.Log]):
   with sqlalchemy.orm.Session(engine) as session:
     session.add_all(logs)
@@ -27,21 +34,30 @@ def insert_log(log: model.Log):
   insert_logs((log, ))
 
 
-def insert_password_reset_token(token: model.PasswordResetToken):
-  with sqlalchemy.orm.Session(engine) as session:
+def insert_password_reset_token(token: model.PasswordResetToken) -> model.PasswordResetToken:
+  with sqlalchemy.orm.Session(engine, expire_on_commit=False) as session:
     session.add(token)
     session.commit()
+  return token
 
 
-def insert_users(users: typing.Sequence[model.User]):
-  user_ids = [user.user_id for user in users]
-  with sqlalchemy.orm.Session(engine) as session:
-    session.add_all(users)
+def insert_user(user: model.User) -> model.User:
+  with sqlalchemy.orm.Session(engine, expire_on_commit=False) as session:
+    session.add(user)
     session.commit()
+  return user
 
 
-def insert_user(user: model.User):
-  insert_users((user, ))
+def select_intercom_by_id(intercom_id: str):
+  with sqlalchemy.orm.Session(engine) as session:
+    return session.scalars(
+      sqlalchemy.select(model.Intercom).where(model.Intercom.intercom_id == intercom_id)
+    ).one_or_none()
+
+
+def select_intercoms() -> typing.Sequence[model.Intercom]:
+  with sqlalchemy.orm.Session(engine) as session:
+    return session.scalars(sqlalchemy.select(model.Intercom)).all()
 
 
 def select_token(token_id: str) -> model.PasswordResetToken:

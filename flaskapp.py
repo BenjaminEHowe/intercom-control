@@ -4,6 +4,7 @@ import os
 
 import common
 import database
+import intercom
 import model
 import user
 
@@ -20,6 +21,7 @@ def user_loader(login_id):
   return user.FlaskLoginUser.from_db(database.select_user_by_login_id(login_id))
 
 
+app.register_blueprint(intercom.intercom_blueprint)
 app.register_blueprint(user.user_blueprint)
 
 

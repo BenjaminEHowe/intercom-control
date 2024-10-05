@@ -13,6 +13,7 @@ class Base(sqlalchemy.orm.DeclarativeBase):
 class LogType(enum.StrEnum):
   FORGOT_PASSWORD_EMAIL_NOT_FOUND = "FORGOT_PASSWORD_EMAIL_NOT_FOUND"
   FORGOT_PASSWORD_TOKEN_SENT = "FORGOT_PASSWORD_TOKEN_SENT"
+  INTERCOM_ADDED = "INTERCOM_ADDED"
   LOGIN_PASSWORD_HASH_INVALID = "LOGIN_PASSWORD_HASH_INVALID"
   LOGIN_PASSWORD_INCORRECT = "LOGIN_PASSWORD_INCORRECT"
   LOGIN_SUCCESS = "LOGIN_SUCCESS"
@@ -24,13 +25,23 @@ class LogType(enum.StrEnum):
   REGISTER_USER_EMAIL_EXISTS = "REGISTER_USER_EMAIL_EXISTS"
 
 
+class Intercom(Base):
+  __tablename__ = "intercom"
+
+  intercom_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:common.generate_id("intercom"))
+  name: sqlalchemy.orm.Mapped[str]
+  display_name: sqlalchemy.orm.Mapped[typing.Optional[str]]
+  serial_number: sqlalchemy.orm.Mapped[str]
+  phone_number: sqlalchemy.orm.Mapped[str]
+
+
 class Log(Base):
   __tablename__ = "log"
 
   log_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:common.generate_id("log"))
   timestamp: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
     sqlalchemy.DateTime(timezone=True),
-    server_default=sqlalchemy.sql.func.now()
+    server_default = sqlalchemy.sql.func.now()
   )
   user_id: sqlalchemy.orm.Mapped[typing.Optional[str]]
   entity_id: sqlalchemy.orm.Mapped[typing.Optional[str]]
@@ -42,11 +53,14 @@ class Log(Base):
 class PasswordResetToken(Base):
   __tablename__ = "password_reset_token"
 
-  token_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True)
+  token_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
+    primary_key = True,
+    default = lambda:common.generate_id(prefix="token", secure=True)
+  )
   user_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(sqlalchemy.ForeignKey("user.user_id"))
   created: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
     sqlalchemy.DateTime(timezone=True),
-    server_default=sqlalchemy.sql.func.now()
+    server_default = sqlalchemy.sql.func.now()
   )
 
 
@@ -57,7 +71,7 @@ class User(Base):
   login_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(default=lambda:common.generate_id("login"))
   created: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
     sqlalchemy.DateTime(timezone=True),
-    server_default=sqlalchemy.sql.func.now()
+    server_default = sqlalchemy.sql.func.now()
   )
   email: sqlalchemy.orm.Mapped[str]
   password_hash: sqlalchemy.orm.Mapped[str]

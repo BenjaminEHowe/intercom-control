@@ -174,14 +174,7 @@ class FlaskLoginUser:
 
 
 def _generate_and_send_reset_token(user: model.User):
-  token = common.generate_id(
-    prefix = "token",
-    secure = True
-  )
-  database.insert_password_reset_token(model.PasswordResetToken(
-    token_id = token,
-    user_id = user.user_id
-  ))
+  token = database.insert_password_reset_token(model.PasswordResetToken(user_id=user.user_id))
   database.insert_log(model.Log(
     user_id = user.user_id,
     entity_id = user.user_id,
@@ -191,7 +184,7 @@ def _generate_and_send_reset_token(user: model.User):
   ))
   mail.send_email(
     to = user.email,
-    message = mail.generate_forgot_password_message(flask.request.root_url, token)
+    message = mail.generate_forgot_password_message(flask.request.root_url, token.token_id)
   )
 
 
@@ -207,7 +200,7 @@ def change_password():
       entity_id = user.user_id,
       remote_address = flask.request.remote_addr,
       type = model.LogType.PASSWORD_CHANGE,
-      message = f"Password changed"
+      message = "Password changed"
     ))
     database.update_user(
       user_id = user.user_id,
@@ -309,11 +302,10 @@ def register():
     user = database.select_user_by_email(email)
     if user is None:
       # TODO: consider adding the below database operations into a single transaction
-      database.insert_user(model.User(
+      user = database.insert_user(model.User(
         email = email,
         password_hash = "invalid"
       ))
-      user = database.select_user_by_email(email)
       database.insert_log(model.Log(
         user_id = user.user_id,
         entity_id = user.user_id,
