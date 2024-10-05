@@ -5,8 +5,6 @@ import sqlalchemy.orm
 import typing
 import ulid
 
-import common
-
 
 def generate_id(
   prefix: typing.Optional[str],
