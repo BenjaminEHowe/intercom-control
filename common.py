@@ -20,7 +20,7 @@ def render_template(name, **kwargs):
     name,
     current_user = flask_login.current_user,
     hash = get_git_hash(),
-    intercoms = database.select_intercoms(),
+    intercoms = sorted(database.select_intercoms(), key=lambda intercom: intercom.name),
     logout_form = LogoutForm(),
     session = flask.session,
     **kwargs
