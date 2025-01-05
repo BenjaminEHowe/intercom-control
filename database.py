@@ -17,6 +17,12 @@ def delete_password_reset_tokens(user_id: str):
     session.commit()
 
 
+def insert_call_point(call_point: model.CallPoint):
+  with sqlalchemy.orm.Session(engine) as session:
+    session.add(call_point)
+    session.commit()
+
+
 def insert_intercom(intercom: model.Intercom) -> model.Intercom:
   with sqlalchemy.orm.Session(engine, expire_on_commit=False) as session:
     session.add(intercom)
@@ -54,6 +60,22 @@ def insert_user(user: model.User) -> model.User:
   return user
 
 
+def select_call_point_by_id(call_point_id: str) -> model.CallPoint:
+  with sqlalchemy.orm.Session(engine) as session:
+    return session.scalars(
+      sqlalchemy.select(model.CallPoint).where(model.CallPoint.call_point_id == call_point_id)
+    ).one_or_none()
+
+
+def select_call_points_by_intercom_id_and_unit_id(intercom_id: str, unit_id: str) -> typing.Sequence[model.CallPoint]:
+  with sqlalchemy.orm.Session(engine) as session:
+    return session.scalars(
+      sqlalchemy.select(model.CallPoint)
+        .where(model.CallPoint.intercom_id == intercom_id)
+        .where(model.CallPoint.unit_id == unit_id)
+    ).all()
+
+
 def select_intercom_by_id(intercom_id: str):
   with sqlalchemy.orm.Session(engine) as session:
     return session.scalars(
@@ -72,6 +94,12 @@ def select_token(token_id: str) -> model.PasswordResetToken:
     return session.scalars(statement).one_or_none()
 
 
+def select_unit_by_id(unit_id: str) -> model.Unit:
+  with sqlalchemy.orm.Session(engine) as session:
+    statement = sqlalchemy.select(model.Unit).where(model.Unit.unit_id == unit_id)
+    return session.scalars(statement).unique().one_or_none()
+
+
 def select_user_by_email(email: str) -> model.User:
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.select(model.User).where(model.User.email == email)
@@ -88,6 +116,13 @@ def select_user_by_user_id(user_id: str) -> model.User:
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.select(model.User).where(model.User.user_id == user_id)
     return session.scalars(statement).one_or_none()
+
+
+def update_call_point(call_point_id: str, **kwargs):
+  with sqlalchemy.orm.Session(engine) as session:
+    statement = sqlalchemy.update(model.CallPoint).where(model.CallPoint.call_point_id == call_point_id).values(**kwargs)
+    session.execute(statement)
+    session.commit()
 
 
 def update_intercom(intercom_id: str, **kwargs):

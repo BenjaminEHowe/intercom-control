@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import enum
 import secrets
+import sqlalchemy.ext.mutable
 import sqlalchemy.orm
 import typing
 import ulid
@@ -47,6 +48,21 @@ intercom_unit_link_table = sqlalchemy.Table(
   sqlalchemy.Column("intercom_id", sqlalchemy.ForeignKey("intercom.intercom_id"), primary_key=True),
   sqlalchemy.Column("unit_id", sqlalchemy.ForeignKey("unit.unit_id"), primary_key=True)
 )
+
+
+class CallPoint(Base):
+  __tablename__ = "call_point"
+
+  call_point_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(primary_key=True, default=lambda:generate_id("cp"))
+  intercom_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(sqlalchemy.ForeignKey("intercom.intercom_id"))
+  unit_id: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(sqlalchemy.ForeignKey("unit.unit_id"))
+  number: sqlalchemy.orm.Mapped[str]
+  name: sqlalchemy.orm.Mapped[str]
+  contacts: sqlalchemy.orm.Mapped[sqlalchemy.ext.mutable.MutableDict[sqlalchemy.JSON]] = sqlalchemy.orm.mapped_column(type_=sqlalchemy.JSON, nullable=False)
+
+  __table_args__ = (
+    sqlalchemy.UniqueConstraint("intercom_id", "number"),
+  )
 
 
 class Intercom(Base):

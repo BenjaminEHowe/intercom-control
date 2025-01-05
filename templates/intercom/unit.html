@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="mt-5">{% block title %}{{ unit.name }} ({{ intercom.name }}){% endblock %}</h1>
+  <ul>
+    {% for call_point in call_points %}
+      <li>
+        <a href="/intercom/{{ intercom.intercom_id }}/unit/{{ unit.unit_id }}/call_point/{{ call_point.call_point_id }}">
+          Call Point {{ call_point.number }}: {{ call_point.name }}
+        </a>
+      </li>
+    {% endfor %}
+    <li><a href="/intercom/{{ intercom.intercom_id }}/unit/{{ unit.unit_id }}/call_point/add">Add Call Point</a></li>
+  </ul>
+{% endblock %}

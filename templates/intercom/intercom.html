@@ -4,19 +4,19 @@
 
 {% block content %}
   <h1 class="mt-5">{% block title %}{{ intercom.name }}{% endblock %}</h1>
-  <form action="/intercom/{{ intercom.intercom_id }}" method="post">
-    {{ form.csrf_token }}
-    {{ render_wtf_field(form.name) }}
-    {{ render_wtf_field(form.display_name) }}
-    {{ render_wtf_field(form.serial_number) }}
-    {{ render_wtf_field(form.phone_number) }}
-    {{ form.submit(class_="btn btn-primary") }}
-  </form>
   <h2 class="mt-4">Units</h2>
   <p><a href="/intercom/{{ intercom.intercom_id }}/unit/add">Add new unit</a></p>
   <ul>
     {% for unit in intercom.units %}
-      <li>{{ unit.name }}</li>
+      <li><a href="/intercom/{{ intercom.intercom_id }}/unit/{{ unit.unit_id }}">{{ unit.name }}</a></li>
     {% endfor %}
   </ul>
+  <h2 class="mt-4">Intercom Details</h2>
+  <form action="/intercom/{{ intercom.intercom_id }}" method="post">
+    {{ form.csrf_token }}
+    {{ render_wtf_field(form.name) }}
+    {{ render_wtf_field(form.display_name) }}
+    {{ render_wtf_field(form.phone_number) }}
+    {{ form.submit(class_="btn btn-primary") }}
+  </form>
 {% endblock %}
