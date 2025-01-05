@@ -1,5 +1,3 @@
-from ast import Index
-
 import flask
 import flask_login
 import flask_wtf
@@ -162,9 +160,11 @@ class EditIntercomForm(flask_wtf.FlaskForm):
 @intercom_blueprint.route("/intercom/add", methods=["GET", "POST"])
 @flask_login.login_required
 def add_intercom():
+  user = database.select_user_by_login_id(flask_login.current_user.get_id())
+  if not user.superuser:
+    flask.abort(403)
   form = AddIntercomForm()
   if form.validate_on_submit():
-    user = database.select_user_by_login_id(flask_login.current_user.get_id())
     intercom = database.insert_intercom(model.Intercom(
       name = form.name.data,
       serial_number = form.serial_number.data,
@@ -218,6 +218,9 @@ def edit_intercom(intercom_id):
 @intercom_blueprint.route("/intercom/<intercom_id>/unit/add", methods=["GET", "POST"])
 @flask_login.login_required
 def add_intercom_unit(intercom_id):
+  user = database.select_user_by_login_id(flask_login.current_user.get_id())
+  if not user.superuser:
+    flask.abort(403)
   # TODO: allow an existing unit to be added
   intercom = database.select_intercom_by_id(intercom_id)
   if intercom is None:

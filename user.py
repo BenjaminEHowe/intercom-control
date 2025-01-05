@@ -127,12 +127,14 @@ class FlaskLoginUser:
   def from_db(cls, user: model.User):
     return cls(
       user_id = user.login_id,
+      superuser = user.superuser,
       email = user.email,
       name = user.name
     )
 
-  def __init__(self, user_id, email, name):
+  def __init__(self, user_id, superuser, email, name):
     self.user_id = user_id
+    self.superuser = superuser
     self.email = email
     self.name = name
 
@@ -160,6 +162,9 @@ class FlaskLoginUser:
       return self.name
     else:
       return self.email
+
+  def is_superuser(self):
+    return self.superuser
 
   def __eq__(self, other):
     if isinstance(other, FlaskLoginUser):

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="mt-5">{% block title %}Users{% endblock %}</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Email</th>
+        <th scope="col">Name</th>
+        <th scope="col">Superuser?</th>
+        <th scope="col">Units</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+        <td>{{ user.email }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.superuser }}</td>
+        <td>{{ user.units }}</td>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

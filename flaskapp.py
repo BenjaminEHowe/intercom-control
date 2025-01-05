@@ -2,6 +2,7 @@ import flask
 import flask_login
 import os
 
+import admin
 import common
 import database
 import intercom
@@ -18,12 +19,13 @@ login_manager.session_protection = "strong" # see https://flask-login.readthedoc
 
 @login_manager.user_loader
 def user_loader(login_id):
-  user_from_login_in = database.select_user_by_login_id(login_id)
-  if user_from_login_in is None:
+  user_from_login_id = database.select_user_by_login_id(login_id)
+  if user_from_login_id is None:
     return None
-  return user.FlaskLoginUser.from_db(user_from_login_in)
+  return user.FlaskLoginUser.from_db(user_from_login_id)
 
 
+app.register_blueprint(admin.admin_blueprint)
 app.register_blueprint(intercom.intercom_blueprint)
 app.register_blueprint(user.user_blueprint)
 

@@ -30,17 +30,21 @@
                 {% for intercom in intercoms %}
                   <li><a class="dropdown-item" href="/intercom/{{ intercom.intercom_id }}">{{ intercom.name }}</a></li>
                 {% endfor %}
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/intercom/add">Add Intercom</a></li>
+                {% if current_user.is_superuser() %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/intercom/add">Add Intercom</a></li>
+                {% endif %}
               </ul>
             </li>
             {% if current_intercom_id is defined %}
               <li class="nav-item">
                 <a class="nav-link" href="/intercom/{{ current_intercom_id }}/units">Units</a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/intercom/{{ current_intercom_id }}/trade">Trade button</a>
-              </li>
+              {% if current_user.is_superuser() %}
+                <li class="nav-item">
+                  <a class="nav-link" href="/intercom/{{ current_intercom_id }}/trade">Trade button</a>
+                </li>
+              {% endif %}
             {% endif %}
           {% endif %}
         </ul>
@@ -56,7 +60,9 @@ aria-expanded="false">
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 <li><a class="dropdown-item" href="/user/profile">Profile</a></li>
-                <li><a class="dropdown-item" href="/user/units">Units</a></li>
+                {% if current_user.is_superuser() %}
+                  <li><a class="dropdown-item" href="/admin/users">Users</a></li>
+                {% endif %}
                 <li>
                   <form action="/user/logout" method="post">
                     {{ logout_form.csrf_token }}

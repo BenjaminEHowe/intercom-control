@@ -49,6 +49,13 @@ intercom_unit_link_table = sqlalchemy.Table(
   sqlalchemy.Column("unit_id", sqlalchemy.ForeignKey("unit.unit_id"), primary_key=True)
 )
 
+user_unit_link_table = sqlalchemy.Table(
+  "user_unit_link",
+  Base.metadata,
+  sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("user.user_id"), primary_key=True),
+  sqlalchemy.Column("unit_id", sqlalchemy.ForeignKey("unit.unit_id"), primary_key=True)
+)
+
 
 class CallPoint(Base):
   __tablename__ = "call_point"
@@ -130,6 +137,11 @@ class User(Base):
     sqlalchemy.DateTime(timezone=True),
     server_default = sqlalchemy.sql.func.now()
   )
+  superuser: sqlalchemy.orm.Mapped[bool] = sqlalchemy.orm.mapped_column(default=False)
   email: sqlalchemy.orm.Mapped[str]
   password_hash: sqlalchemy.orm.Mapped[str]
   name: sqlalchemy.orm.Mapped[typing.Optional[str]]
+  units: sqlalchemy.orm.Mapped[typing.List[Unit]] = sqlalchemy.orm.relationship(
+    secondary=user_unit_link_table,
+    lazy = "joined"
+  )

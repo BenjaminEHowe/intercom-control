@@ -103,19 +103,24 @@ def select_unit_by_id(unit_id: str) -> model.Unit:
 def select_user_by_email(email: str) -> model.User:
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.select(model.User).where(model.User.email == email)
-    return session.scalars(statement).one_or_none()
+    return session.scalars(statement).unique().one_or_none()
 
 
 def select_user_by_login_id(login_id: str) -> model.User:
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.select(model.User).where(model.User.login_id == login_id)
-    return session.scalars(statement).one_or_none()
+    return session.scalars(statement).unique().one_or_none()
 
 
 def select_user_by_user_id(user_id: str) -> model.User:
   with sqlalchemy.orm.Session(engine) as session:
     statement = sqlalchemy.select(model.User).where(model.User.user_id == user_id)
-    return session.scalars(statement).one_or_none()
+    return session.scalars(statement).unique().one_or_none()
+
+
+def select_users() -> typing.Sequence[model.User]:
+  with sqlalchemy.orm.Session(engine) as session:
+    return session.scalars(sqlalchemy.select(model.User)).unique().all()
 
 
 def update_call_point(call_point_id: str, **kwargs):
